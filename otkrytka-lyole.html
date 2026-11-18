@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лёле от Лисёнка 🦊🦝</title>
+<style>
+  /* ============================================================
+     1. БАЗА
+  ============================================================ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: linear-gradient(135deg, #2a0e00 0%, #7a2d0a 45%, #c95a1a 80%, #e8863a 100%);
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ============================================================
+     2. ФОН: звёзды, сердечки, падающие лисички
+  ============================================================ */
+  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  .star { position: absolute; background: #ffe0b2; border-radius: 50%; animation: twinkle 3s infinite ease-in-out; }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+
+  .hearts { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+  .heart { position: absolute; font-size: 20px; animation: floatUp linear infinite; opacity: 0; }
+  @keyframes floatUp {
+    0% { transform: translateY(100vh) scale(0) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.85; }
+    90% { opacity: 0.85; }
+    100% { transform: translateY(-100px) scale(1.5) rotate(360deg); opacity: 0; }
+  }
+
+  .falling-fox {
+    position: fixed; top: -60px;
+    pointer-events: none; z-index: 3; opacity: 0;
+    animation: foxSlowFall linear infinite;
+  }
+  @keyframes foxSlowFall {
+    0% { transform: translateY(-60px) rotate(-15deg) scale(1); opacity: 0; }
+    8% { opacity: 0.9; }
+    92% { opacity: 0.9; }
+    100% { transform: translateY(110vh) rotate(25deg) scale(0.85); opacity: 0; }
+  }
+
+  /* ============================================================
+     3. ПЕРЕХОДЫ МЕЖДУ СТРАНИЦАМИ
+  ============================================================ */
+  .page {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex; justify-content: center; align-items: center;
+    z-index: 10;
+    transition: opacity 1s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 20px; overflow-y: auto;
+  }
+  .page.hidden-out { opacity: 0; transform: translateX(-120px) scale(0.85); pointer-events: none; }
+  .page.hidden-wait { opacity: 0; transform: translateX(120px) scale(0.85); pointer-events: none; }
+  .page.show { opacity: 1; transform: translateX(0) scale(1); pointer-events: auto; }
+
+  /* ============================================================
+     4. КАРТОЧКИ
+  ============================================================ */
+  .card {
+    position: relative;
+    background: rgba(255, 240, 220, 0.10);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 180, 100, 0.4);
+    border-radius: 35px; padding: 45px 55px;
+    max-width: 680px; width: 100%; text-align: center;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 100px rgba(255, 140, 60, 0.35);
+    margin: auto;
+  }
+  .card::before, .card::after {
+    content: ''; position: absolute; top: -38px;
+    width: 0; height: 0;
+    border-left: 42px solid transparent;
+    border-right: 42px solid transparent;
+    border-bottom: 60px solid #d9641f;
+    filter: drop-shadow(0 -3px 8px rgba(0,0,0,0.3));
+    z-index: -1;
+  }
+  .card::before { left: 8%; transform: rotate(-12deg); transform-origin: bottom right; animation: earWiggleL 4s ease-in-out infinite; }
+  .card::after  { right: 8%; transform: rotate(12deg); transform-origin: bottom left; animation: earWiggleR 4s ease-in-out infinite; }
+  @keyframes earWiggleL {
+    0%, 100% { transform: rotate(-12deg) scale(1); }
+    50% { transform: rotate(-16deg) scale(1.04); }
+  }
+  @keyframes earWiggleR {
+    0%, 100% { transform: rotate(12deg) scale(1); }
+    50% { transform: rotate(16deg) scale(1.04); }
+  }
+
+  .big-heart { font-size: 2.8em; margin-bottom: 10px; display: inline-block; animation: heartbeat 1.5s ease-in-out infinite; }
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    15% { transform: scale(1.25); }
+    30% { transform: scale(1); }
+    45% { transform: scale(1.15); }
+  }
+
+  .title {
+    font-size: 2.2em; margin-bottom: 16px;
+    background: linear-gradient(135deg, #ffb74d, #fff3e0, #ff8a3d, #ffb74d);
+    background-size: 200% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shine 3s linear infinite;
+  }
+  @keyframes shine { to { background-position: 200% center; } }
+
+  .subtitle { font-size: 1.05em; color: rgba(255, 240, 220, 0.9); line-height: 1.8; margin-bottom: 24px; }
+
+  /* ============================================================
+     5. СЧЁТЧИКИ (основной и «У Лёли»)
+  ============================================================ */
+  .counter-box, .clock-box {
+    background: rgba(255, 150, 70, 0.18);
+    border: 2px solid rgba(255, 170, 90, 0.5);
+    border-radius: 22px; padding: 22px 16px;
+    transition: all 0.5s ease; position: relative;
+  }
+  .counter-box { margin-bottom: 18px; }
+  .clock-box { margin-bottom: 28px; }
+  .counter-box.anniversary {
+    background: rgba(255, 160, 80, 0.35);
+    border-color: #ffe0b2;
+    animation: annivGlow 2s ease-in-out infinite;
+  }
+  @keyframes annivGlow {
+    0%, 100% { box-shadow: 0 0 40px rgba(255, 160, 80, 0.7), inset 0 0 20px rgba(255, 224, 178, 0.2); }
+    50% { box-shadow: 0 0 75px rgba(255, 180, 90, 1), inset 0 0 30px rgba(255, 224, 178, 0.4); }
+  }
+  .counter-label { color: rgba(255, 235, 200, 0.85); font-size: 0.9em; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; }
+  .clock-box .counter-label { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .clock-box .counter-label .icon { font-size: 1.3em; }
+  .counter { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .time-unit { display: flex; flex-direction: column; align-items: center; min-width: 58px; transition: all 0.5s ease; }
+  .time-value {
+    font-size: 2.1em; font-weight: bold; color: #ffb74d;
+    text-shadow: 0 0 20px rgba(255, 150, 60, 0.8);
+    font-variant-numeric: tabular-nums; font-family: 'Courier New', monospace;
+    transition: transform 0.3s ease;
+  }
+  .time-value.pulse { animation: pulse 0.5s ease; }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); color: #fff3e0; }
+  }
+  .time-label { font-size: 0.68em; color: rgba(255, 235, 200, 0.7); letter-spacing: 1px; margin-top: 5px; text-transform: uppercase; }
+  .clock-box .time-value { color: #ffe0b2; text-shadow: 0 0 20px rgba(255, 224, 178, 0.8); }
+
+  .year-unit { display: none; flex-direction: column; align-items: center; min-width: 58px; opacity: 0; transform: scale(0.3); }
+  .year-unit.show { display: flex; animation: yearAppear 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+  @keyframes yearAppear {
+    0% { opacity: 0; transform: scale(0.3) rotate(-180deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+  .year-unit .time-value {
+    color: #fff3e0; font-size: 2.4em;
+    text-shadow: 0 0 30px rgba(255, 224, 178, 1), 0 0 15px #ff8a3d;
+    animation: yearPulse 2s ease-in-out infinite;
+  }
+  @keyframes yearPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .year-unit .time-label { color: #ffe0b2; font-weight: bold; }
+
+  .anniversary-badge {
+    display: none; margin-top: 14px; padding: 8px 20px;
+    background: linear-gradient(135deg, #ff8a3d, #ffe0b2);
+    color: #4a1500; font-weight: bold; border-radius: 20px;
+    font-size: 0.9em; letter-spacing: 1px;
+    animation: badgePulse 1.5s ease-in-out infinite;
+  }
+  .anniversary-badge.show { display: inline-block; }
+  @keyframes badgePulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 224, 178, 0.6); }
+    50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 224, 178, 0.9); }
+  }
+
+  /* ============================================================
+     6. ТЕКСТ И КНОПКИ
+  ============================================================ */
+  .message { color: rgba(255, 240, 220, 0.95); font-size: 1.02em; line-height: 1.8; font-style: italic; }
+
+  .btn-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+  .next-btn {
+    margin-top: 28px; padding: 15px 38px;
+    font-family: 'Georgia', serif; font-size: 1.05em; letter-spacing: 1px;
+    color: #4a1500;
+    background: linear-gradient(135deg, #ffb74d, #ffe0b2, #ff8a3d);
+    background-size: 200% auto;
+    border: none; border-radius: 50px; cursor: pointer; font-weight: bold;
+    box-shadow: 0 8px 25px rgba(255, 140, 60, 0.5), 0 0 30px rgba(255, 180, 100, 0.3);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: shine 3s linear infinite, btnFloat 3s ease-in-out infinite;
+    position: relative; overflow: hidden;
+  }
+  .next-btn:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 15px 40px rgba(255, 140, 60, 0.7), 0 0 50px rgba(255, 180, 100, 0.5);
+  }
+  .next-btn:active { transform: translateY(-1px) scale(0.98); }
+  .next-btn:hover { animation: shine 3s linear infinite; }
+  @keyframes btnFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  .back-btn {
+    margin-top: 28px; padding: 12px 30px;
+    font-family: 'Georgia', serif; font-size: 0.95em;
+    color: #ffe0b2; background: transparent;
+    border: 2px solid rgba(255, 180, 100, 0.6);
+    border-radius: 50px; cursor: pointer;
+    transition: all 0.4s ease; opacity: 0;
+    animation: textRise 1s 2.3s forwards;
+  }
+  .back-btn:hover {
+    background: rgba(255, 180, 100, 0.2);
+    border-color: #ffe0b2;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(255, 140, 60, 0.4);
+  }
+
+  /* ============================================================
+     7. СТРАНИЦА ПОЗДРАВЛЕНИЯ
+  ============================================================ */
+  .greeting-card {
+    background: linear-gradient(160deg, rgba(255, 200, 140, 0.18), rgba(255, 140, 60, 0.12));
+    border: 2px solid rgba(255, 200, 140, 0.6);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 120px rgba(255, 160, 80, 0.5);
+  }
+  .greeting-title {
+    font-size: 2em; margin-bottom: 20px;
+    background: linear-gradient(135deg, #ffe0b2, #ff8a3d, #ffe0b2);
+    background-size: 200% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shine 3s linear infinite;
+  }
+  .greeting-text {
+    color: rgba(255, 245, 230, 0.95);
+    font-size: 1.1em; line-height: 2; font-style: italic;
+    margin-bottom: 15px; opacity: 0;
+    animation: textRise 1s 0.3s forwards;
+  }
+  .greeting-text.d2 { animation-delay: 0.7s; }
+  .greeting-text.d3 { animation-delay: 1.1s; }
+  .greeting-text.d4 { animation-delay: 1.5s; }
+  .greeting-text.bold { font-weight: bold; color: #ffe0b2; }
+  @keyframes textRise {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hearts-line { font-size: 1.6em; margin: 15px 0; letter-spacing: 8px; opacity: 0; animation: textRise 1s 1.9s forwards; }
+
+  /* ============================================================
+     8. СЦЕНА: гирлянда фото
+  ============================================================ */
+  .scene-card {
+    background: linear-gradient(170deg, rgba(60, 25, 5, 0.55), rgba(120, 50, 15, 0.45));
+    border: 2px solid rgba(255, 190, 120, 0.55);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 120px rgba(255, 150, 70, 0.45);
+    padding: 20px 30px 30px;
+    max-width: 740px;
+  }
+
+  .photo-strings {
+    position: relative;
+    height: 150px;
+    margin-bottom: 8px;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 1.2s ease, transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  .photo-strings.revealed { opacity: 1; transform: translateY(0); }
+
+  .string {
+    position: absolute; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 220, 170, 0.8), transparent);
+    box-shadow: 0 0 6px rgba(255, 220, 170, 0.5);
+  }
+  .string.s1 { left: 5%; width: 30%; top: 14px; transform: rotate(2deg); }
+  .string.s2 { left: 35%; width: 30%; top: 22px; transform: rotate(-3deg); }
+  .string.s3 { left: 65%; width: 30%; top: 12px; transform: rotate(4deg); }
+
+  .hanging-photo {
+    position: absolute; width: 64px; height: 78px;
+    background: #fff8ee; padding: 5px 5px 14px;
+    border-radius: 3px; box-shadow: 0 6px 14px rgba(0,0,0,0.45);
+    transform-origin: top center;
+    animation: sway 4s ease-in-out infinite;
+    transition: opacity 0.5s ease;
+  }
+  .hanging-photo::before {
+    content: ''; position: absolute;
+    top: -14px; left: 50%; width: 1.5px; height: 14px;
+    background: rgba(255, 220, 170, 0.85);
+    transform: translateX(-50%);
+  }
+  .hanging-photo .photo-inner {
+    width: 100%; height: 100%;
+    border-radius: 2px; display: flex; justify-content: center; align-items: center;
+    font-size: 1.9em; background: linear-gradient(135deg, #ffd9a8, #ffb26b);
+  }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
+  }
+  .hp1 { left: 8%;  top: 20px; animation-delay: 0s; }
+  .hp2 { left: 26%; top: 30px; animation-delay: 0.6s; }
+  .hp3 { left: 44%; top: 16px; animation-delay: 1.1s; }
+  .hp4 { left: 62%; top: 26px; animation-delay: 0.3s; }
+  .hp5 { left: 80%; top: 18px; animation-delay: 0.9s; }
+
+  /* ============================================================
+     9. СЦЕНА: падающее фото (оно же — кликабельное)
+  ============================================================ */
+  .falling-photo {
+    position: fixed;
+    top: 80px;
+    left: 70%;
+    width: 64px; height: 78px;
+    background: #fff8ee; padding: 5px 5px 14px;
+    border-radius: 3px; box-shadow: 0 6px 14px rgba(0,0,0,0.45);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 0) rotate(0deg);
+    transition: opacity 0.6s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .falling-photo .photo-inner {
+    width: 100%; height: 100%; border-radius: 2px;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 1.9em; background: linear-gradient(135deg, #ffd9a8, #ffb26b);
+  }
+  .falling-photo.animate { animation: photoFall 2.2s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+  @keyframes photoFall {
+    0% { opacity: 1; transform: translate(-50%, 0) rotate(-8deg); }
+    50% { opacity: 1; transform: translate(calc(-50% - 60px), 200px) rotate(30deg); }
+    75% { opacity: 1; transform: translate(calc(-50% - 110px), 320px) rotate(55deg); }
+    85% { transform: translate(calc(-50% - 120px), 340px) rotate(62deg) scale(1.05); }
+    100% { opacity: 1; transform: translate(calc(-50% - 125px), 350px) rotate(65deg) scale(1); }
+  }
+  /* Приземлилось на пол — можно тыкнуть */
+  .falling-photo.landed {
+    animation: none;
+    cursor: pointer;
+    pointer-events: auto;
+    transform: rotate(22deg);
+  }
+  .falling-photo.landed:hover {
+    transform: rotate(18deg) scale(1.12);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.6), 0 0 0 2px rgba(255,200,120,0.9), 0 0 20px rgba(255,180,90,0.7);
+  }
+  .falling-photo.tappable::after {
+    content: '👆';
+    position: absolute;
+    top: -22px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.1em;
+    animation: tapBounce 1.5s ease-in-out infinite;
+  }
+  @keyframes tapBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-6px); }
+  }
+
+  .story-window {
+    position: relative;
+    margin-top: 10px;
+    min-height: 82px;
+    padding: 16px 24px;
+    background: rgba(255, 245, 230, 0.96);
+    color: #5a2505;
+    border-radius: 20px;
+    font-size: 0.98em;
+    line-height: 1.55;
+    font-style: italic;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 0 2px rgba(255, 190, 120, 0.5);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1);
+    z-index: 22;
+  }
+  .story-window.visible { opacity: 1; transform: translateY(0); }
+
+  .tap-hint {
+    position: absolute; bottom: 96px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 245, 230, 0.95);
+    color: #5a2505; padding: 6px 16px;
+    border-radius: 20px; font-size: 0.78em; font-style: italic;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    z-index: 25; opacity: 0; pointer-events: none;
+    transition: opacity 0.6s ease; white-space: nowrap;
+  }
+  .tap-hint.show { opacity: 1; }
+  .tap-hint::after {
+    content: ''; position: absolute;
+    bottom: -6px; left: 50%;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 7px solid rgba(255, 245, 230, 0.95);
+  }
+
+  /* ============================================================
+     10. СЦЕНА: диван и лисичка
+  ============================================================ */
+  .scene {
+    position: relative;
+    height: 320px;
+    margin-top: 4px;
+  }
+
+  .sofa-wrap {
+    position: absolute; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 400px; height: 175px;
+    z-index: 5;
+  }
+  .sofa-back {
+    position: absolute; bottom: 70px; left: 50%;
+    transform: translateX(-50%);
+    width: 340px; height: 100px;
+    background: linear-gradient(170deg, #9c5330, #6e3819);
+    border-radius: 46px 46px 10px 10px;
+    box-shadow: inset 0 -14px 24px rgba(0,0,0,0.35), inset 0 8px 14px rgba(255,210,170,0.18);
+  }
+  .sofa-back::before, .sofa-back::after {
+    content: ''; position: absolute; bottom: 14px;
+    width: 44%; height: 78%;
+    background: linear-gradient(170deg, #b6653c, #8a4a26);
+    border-radius: 30px;
+    box-shadow: inset 0 -6px 12px rgba(0,0,0,0.25);
+  }
+  .sofa-back::before { left: 4%; }
+  .sofa-back::after  { right: 4%; }
+  .sofa-seat {
+    position: absolute; bottom: 26px; left: 50%;
+    transform: translateX(-50%);
+    width: 400px; height: 62px;
+    background: linear-gradient(170deg, #b6653c, #7d4020);
+    border-radius: 20px;
+    box-shadow: 0 14px 24px rgba(0,0,0,0.5), inset 0 5px 10px rgba(255,220,180,0.28);
+  }
+  .sofa-arm {
+    position: absolute; bottom: 16px;
+    width: 52px; height: 112px;
+    background: linear-gradient(170deg, #a85a32, #6e3819);
+    border-radius: 26px;
+    box-shadow: 0 12px 20px rgba(0,0,0,0.45), inset 0 6px 10px rgba(255,210,170,0.2);
+    z-index: 6;
+  }
+  .sofa-arm.left { left: 0; }
+  .sofa-arm.right { right: 0; }
+  .sofa-leg {
+    position: absolute; bottom: 0;
+    width: 18px; height: 26px;
+    background: #4a2410; border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  }
+  .sofa-leg.l { left: 44px; }
+  .sofa-leg.r { right: 44px; }
+
+  .fox {
+    position: absolute; bottom: 82px; left: 50%;
+    transform: translateX(-50%);
+    width: 160px; height: 200px;
+    z-index: 15;
+    animation: foxBreathe 3.4s ease-in-out infinite;
+    transform-origin: bottom center;
+    cursor: pointer;
+    transition: filter 0.3s ease, opacity 0.8s ease;
+  }
+  .fox:hover { filter: drop-shadow(0 0 15px rgba(255, 200, 120, 0.6)); }
+  @keyframes foxBreathe {
+    0%, 100% { transform: translateX(-50%) scaleY(1); }
+    50% { transform: translateX(-50%) scaleY(1.015); }
+  }
+  .fox.laughing { animation: foxLaugh 0.5s ease-in-out 3; }
+  @keyframes foxLaugh {
+    0%, 100% { transform: translateX(-50%) rotate(0deg); }
+    25% { transform: translateX(-50%) rotate(-2deg); }
+    75% { transform: translateX(-50%) rotate(2deg); }
+  }
+  .fox.joyful { animation: foxJoy 0.6s ease-in-out 2; }
+  @keyframes foxJoy {
+    0%, 100% { transform: translateX(-50%) scale(1) rotate(0deg); }
+    25% { transform: translateX(-50%) scale(1.06) rotate(-3deg); }
+    75% { transform: translateX(-50%) scale(1.06) rotate(3deg); }
+  }
+
+  .fox-tail {
+    position: absolute; bottom: 6px; right: -52px;
+    width: 100px; height: 60px;
+    background: linear-gradient(160deg, #f09040 0%, #e07a2e 55%, #c95a1a 100%);
+    border-radius: 55% 45% 50% 50% / 65% 65% 35% 35%;
+    transform: rotate(-10deg); transform-origin: left center;
+    box-shadow: inset -6px -6px 14px rgba(120,50,10,0.35);
+    animation: tailWag 3s ease-in-out infinite;
+    z-index: 1;
+  }
+  .fox-tail::after {
+    content: ''; position: absolute; top: 2px; right: -2px;
+    width: 42px; height: 42px;
+    background: #fff3e0;
+    border-radius: 55% 45% 50% 50% / 65% 65% 35% 35%;
+    box-shadow: inset -3px -3px 8px rgba(180,120,70,0.25);
+  }
+  @keyframes tailWag {
+    0%, 100% { transform: rotate(-10deg); }
+    50% { transform: rotate(-22deg); }
+  }
+  .fox.joyful .fox-tail { animation: tailHappy 0.25s ease-in-out infinite; }
+  @keyframes tailHappy {
+    0%, 100% { transform: rotate(-8deg); }
+    50% { transform: rotate(-38deg); }
+  }
+
+  .fox-body {
+    position: absolute; bottom: 12px; left: 50%;
+    transform: translateX(-50%);
+    width: 104px; height: 118px;
+    background: linear-gradient(165deg, #f79a4a 0%, #e8863a 45%, #d9641f 100%);
+    border-radius: 46% 46% 44% 44% / 52% 52% 48% 48%;
+    box-shadow: inset -10px -14px 24px rgba(150,65,15,0.4), 0 6px 12px rgba(0,0,0,0.25);
+    z-index: 2;
+  }
+  .fox-belly {
+    position: absolute; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 62px; height: 74px;
+    background: linear-gradient(180deg, #fff8ec, #ffe8cc);
+    border-radius: 50% 50% 44% 44%;
+    box-shadow: inset 0 -6px 12px rgba(210,160,110,0.3);
+  }
+
+  .fox-foot {
+    position: absolute; bottom: 0;
+    width: 40px; height: 22px;
+    background: linear-gradient(180deg, #d9641f, #b64c14);
+    border-radius: 45% 45% 40% 40% / 60% 60% 40% 40%;
+    box-shadow: inset -3px -4px 8px rgba(120,50,10,0.4), 0 3px 6px rgba(0,0,0,0.3);
+    z-index: 3;
+  }
+  .fox-foot.l { left: 8px; }
+  .fox-foot.r { right: 8px; }
+  .fox-foot .toe {
+    position: absolute; bottom: 2px;
+    width: 5px; height: 5px;
+    background: #4a2410; border-radius: 50%;
+  }
+  .fox-foot .toe:nth-child(1) { left: 8px; }
+  .fox-foot .toe:nth-child(2) { left: 16px; }
+  .fox-foot .toe:nth-child(3) { left: 24px; }
+
+  .fox-arm {
+    position: absolute;
+    top: 105px;
+    width: 24px; height: 44px;
+    background: linear-gradient(180deg, #f79a4a, #d9641f);
+    border-radius: 12px 12px 10px 10px;
+    z-index: 4;
+    box-shadow: inset -3px -4px 8px rgba(150,65,15,0.35);
+    transform-origin: top center;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s ease;
+  }
+  .fox-arm::after {
+    content: ''; position: absolute;
+    bottom: -4px; left: 50%;
+    transform: translateX(-50%);
+    width: 26px; height: 18px;
+    background: linear-gradient(180deg, #d9641f, #b64c14);
+    border-radius: 50%;
+    box-shadow: inset -2px -3px 6px rgba(120,50,10,0.4);
+  }
+  .fox-arm.l { left: 50%; margin-left: -28px; transform: rotate(15deg); }
+  .fox-arm.r { left: 50%; margin-left: 4px;  transform: rotate(-15deg); }
+
+  .fox-head {
+    position: absolute; top: 6px; left: 50%;
+    transform: translateX(-50%) rotate(0deg);
+    transform-origin: bottom center;
+    width: 104px; height: 96px;
+    background: linear-gradient(165deg, #fca657 0%, #f09040 55%, #e07a2e 100%);
+    border-radius: 50% 50% 46% 46%;
+    z-index: 18;
+    box-shadow: inset -8px -10px 20px rgba(150,65,15,0.35), 0 4px 10px rgba(0,0,0,0.2);
+    transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .fox.looking-up .fox-head { transform: translateX(-50%) translateY(-10px) rotate(-14deg); }
+  .fox.looking-down .fox-head { transform: translateX(-50%) translateY(4px) rotate(8deg); }
+
+  .fox-snout {
+    position: absolute; bottom: 2px; left: 50%;
+    transform: translateX(-50%);
+    width: 62px; height: 48px;
+    background: linear-gradient(180deg, #fff8ec, #ffe8cc);
+    border-radius: 50% 50% 46% 46%;
+  }
+  .fox-nose {
+    position: absolute; bottom: 30px; left: 50%;
+    transform: translateX(-50%);
+    width: 15px; height: 11px;
+    background: #3a1a08;
+    border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+    z-index: 2;
+    box-shadow: inset -2px -2px 4px rgba(0,0,0,0.4);
+    transition: bottom 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .fox.looking-up .fox-nose { bottom: 34px; }
+
+  .fox-eye {
+    position: absolute; top: 36px;
+    width: 13px; height: 15px;
+    background: #3a1a08;
+    border-radius: 50%;
+    animation: blink 4.5s infinite;
+    z-index: 3;
+    transition: top 1.2s cubic-bezier(0.34, 1.56, 0.64, 1), transform 1.2s ease, height 0.3s ease, border-radius 0.3s ease;
+  }
+  .fox-eye.l { left: 24px; }
+  .fox-eye.r { right: 24px; }
+  .fox-eye::after {
+    content: ''; position: absolute;
+    top: 2px; left: 3px;
+    width: 4.5px; height: 4.5px;
+    background: #fff; border-radius: 50%;
+    transition: top 1.2s ease, left 1.2s ease, opacity 0.3s ease;
+  }
+  .fox.looking-up .fox-eye { top: 30px; transform: scaleY(0.9); }
+  .fox.looking-up .fox-eye::after { top: 1px; left: 4px; }
+  .fox.looking-down .fox-eye { top: 40px; }
+  .fox.looking-down .fox-eye::after { top: 5px; }
+  .fox.tracking-photo .fox-eye::after { left: 5px; top: 4px; }
+  .fox.joyful .fox-eye {
+    height: 6px; top: 40px;
+    border-radius: 50% 50% 40% 40%;
+    animation: none; transform: scaleY(1);
+  }
+  .fox.joyful .fox-eye::after { opacity: 0; }
+  @keyframes blink {
+    0%, 93%, 100% { transform: scaleY(1); }
+    96% { transform: scaleY(0.1); }
+  }
+
+  .fox-ear {
+    position: absolute; top: -30px;
+    width: 0; height: 0;
+    border-left: 22px solid transparent;
+    border-right: 22px solid transparent;
+    border-bottom: 40px solid #e8863a;
+    z-index: 17;
+    filter: drop-shadow(0 -2px 3px rgba(0,0,0,0.2));
+    transition: top 0.4s ease, transform 0.4s ease;
+  }
+  .fox-ear.l { left: 2px; transform: rotate(-14deg); transform-origin: bottom center; }
+  .fox-ear.r { right: 2px; transform: rotate(14deg); transform-origin: bottom center; }
+  .fox-ear::after {
+    content: ''; position: absolute;
+    top: 16px; left: -12px;
+    width: 0; height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-bottom: 22px solid #ffd0a8;
+  }
+  .fox.joyful .fox-ear.l { transform: rotate(-4deg) translateY(-6px); }
+  .fox.joyful .fox-ear.r { transform: rotate(4deg) translateY(-6px); }
+
+  /* ============================================================
+     11. СЦЕНА ОБЪЯТИЙ
+  ============================================================ */
+  .hug-scene {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 380px; height: 260px;
+    z-index: 40;
+    opacity: 0; pointer-events: none;
+    transition: opacity 1.2s ease;
+  }
+  .hug-scene.show { opacity: 1; }
+
+  .hug-pair {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 300px; height: 220px;
+    animation: hugBreathe 3s ease-in-out infinite;
+  }
+  @keyframes hugBreathe {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.015); }
+  }
+
+  .hug-bodies {
+    position: absolute;
+    bottom: 30px; left: 50%;
+    transform: translateX(-50%);
+    width: 220px; height: 110px;
+    z-index: 2;
+  }
+  .hug-body-fox {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 130px; height: 108px;
+    background: linear-gradient(165deg, #f79a4a, #e8863a 45%, #d9641f);
+    border-radius: 50% 30% 40% 50% / 60% 40% 50% 50%;
+    box-shadow: inset -8px -10px 20px rgba(150,65,15,0.4);
+  }
+  .hug-body-raccoon {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 130px; height: 108px;
+    background: linear-gradient(165deg, #8a8a8a, #6a6a6a 50%, #4a4a4a);
+    border-radius: 30% 50% 50% 40% / 40% 60% 50% 50%;
+    box-shadow: inset -8px -10px 20px rgba(0,0,0,0.4);
+  }
+  .hug-belly-fox {
+    position: absolute;
+    bottom: 0; left: 30px;
+    width: 60px; height: 70px;
+    background: #fff3e0;
+    border-radius: 50% 50% 44% 44%;
+    z-index: 3; opacity: 0.85;
+  }
+  .hug-belly-raccoon {
+    position: absolute;
+    bottom: 0; right: 30px;
+    width: 60px; height: 70px;
+    background: #c8c8c8;
+    border-radius: 50% 50% 44% 44%;
+    z-index: 3; opacity: 0.85;
+  }
+
+  .hug-head {
+    position: absolute;
+    top: 36px;
+    width: 90px; height: 84px;
+    border-radius: 50% 50% 46% 46%;
+    z-index: 6;
+  }
+  .hug-head-fox {
+    left: 62px;
+    background: linear-gradient(165deg, #fca657, #f09040 55%, #e07a2e);
+    box-shadow: inset -6px -8px 16px rgba(150,65,15,0.35);
+    transform: rotate(-12deg);
+  }
+  .hug-head-raccoon {
+    right: 62px;
+    background: linear-gradient(165deg, #a0a0a0, #808080 55%, #606060);
+    box-shadow: inset -6px -8px 16px rgba(0,0,0,0.35);
+    transform: rotate(12deg);
+  }
+  .hug-head-fox::before, .hug-head-fox::after {
+    content: ''; position: absolute; top: -26px;
+    width: 0; height: 0;
+    border-left: 18px solid transparent;
+    border-right: 18px solid transparent;
+    border-bottom: 34px solid #e8863a;
+  }
+  .hug-head-fox::before { left: 4px; transform: rotate(-14deg); }
+  .hug-head-fox::after  { right: 4px; transform: rotate(14deg); }
+  .hug-head-raccoon::before, .hug-head-raccoon::after {
+    content: ''; position: absolute; top: -22px;
+    width: 0; height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-bottom: 28px solid #808080;
+  }
+  .hug-head-raccoon::before { left: 6px; transform: rotate(-12deg); }
+  .hug-head-raccoon::after  { right: 6px; transform: rotate(12deg); }
+
+  .hug-snout-fox {
+    position: absolute;
+    bottom: 2px; left: 50%;
+    transform: translateX(-50%);
+    width: 56px; height: 42px;
+    background: #fff3e0;
+    border-radius: 50% 50% 46% 46%;
+  }
+  .hug-snout-raccoon {
+    position: absolute;
+    bottom: 2px; left: 50%;
+    transform: translateX(-50%);
+    width: 56px; height: 42px;
+    background: #e8e8e8;
+    border-radius: 50% 50% 46% 46%;
+  }
+  .hug-raccoon-mask {
+    position: absolute;
+    top: 28px; left: 50%;
+    transform: translateX(-50%);
+    width: 76px; height: 28px;
+    background: #2a2a2a;
+    border-radius: 50%;
+    z-index: 7;
+  }
+  .hug-raccoon-mask::before, .hug-raccoon-mask::after {
+    content: ''; position: absolute; top: 8px;
+    width: 12px; height: 12px;
+    background: #fff; border-radius: 50%;
+  }
+  .hug-raccoon-mask::before { left: 12px; }
+  .hug-raccoon-mask::after { right: 12px; }
+
+  .hug-eye-fox {
+    position: absolute; top: 36px;
+    width: 14px; height: 5px;
+    background: #3a1a08;
+    border-radius: 50% 50% 40% 40%;
+    z-index: 8;
+  }
+  .hug-eye-fox.l { left: 22px; }
+  .hug-eye-fox.r { right: 22px; }
+
+  .hug-arms {
+    position: absolute; top: 108px; left: 50%;
+    transform: translateX(-50%);
+    width: 220px; height: 20px;
+    z-index: 9;
+    background: linear-gradient(90deg, #d9641f 0%, #d9641f 50%, #5a5a5a 50%, #5a5a5a 100%);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  }
+  .hug-arms::before, .hug-arms::after {
+    content: ''; position: absolute; top: -4px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+  }
+  .hug-arms::before {
+    left: -10px;
+    background: linear-gradient(180deg, #f79a4a, #d9641f);
+    box-shadow: inset -2px -3px 6px rgba(120,50,10,0.4);
+  }
+  .hug-arms::after {
+    right: -10px;
+    background: linear-gradient(180deg, #8a8a8a, #5a5a5a);
+    box-shadow: inset -2px -3px 6px rgba(0,0,0,0.4);
+  }
+
+  .hug-tail {
+    position: absolute; bottom: 18px;
+    width: 78px; height: 42px;
+    border-radius: 55% 45% 50% 50% / 65% 65% 35% 35%;
+    z-index: 1;
+  }
+  .hug-tail-fox {
+    left: -8px;
+    background: linear-gradient(160deg, #f09040, #c95a1a);
+    transform: rotate(-25deg);
+  }
+  .hug-tail-fox::after {
+    content: ''; position: absolute; top: 2px; left: 0;
+    width: 30px; height: 30px;
+    background: #fff3e0;
+    border-radius: 55% 45% 50% 50% / 65% 65% 35% 35%;
+  }
+  .hug-tail-raccoon {
+    right: -8px;
+    background: repeating-linear-gradient(90deg, #6a6a6a 0px, #6a6a6a 10px, #3a3a3a 10px, #3a3a3a 20px);
+    transform: rotate(25deg);
+  }
+
+  .hug-hearts {
+    position: absolute; top: -10px; left: 50%;
+    transform: translateX(-50%);
+    width: 200px; height: 80px;
+    z-index: 10; pointer-events: none;
+  }
+  .hug-heart {
+    position: absolute; font-size: 1.4em;
+    animation: hugHeartFloat 3s ease-in-out infinite;
+    opacity: 0;
+  }
+  .hug-heart.h1 { left: 20%; top: 30%; animation-delay: 0s; }
+  .hug-heart.h2 { left: 45%; top: 10%; animation-delay: 0.6s; font-size: 1.7em; }
+  .hug-heart.h3 { left: 70%; top: 35%; animation-delay: 1.2s; }
+  .hug-heart.h4 { left: 35%; top: 50%; animation-delay: 1.8s; font-size: 1.1em; }
+  .hug-heart.h5 { left: 60%; top: 55%; animation-delay: 2.4s; font-size: 1.3em; }
+  @keyframes hugHeartFloat {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0; }
+    20% { opacity: 0.9; }
+    80% { opacity: 0.9; }
+    100% { transform: translateY(-40px) scale(1.3); opacity: 0; }
+  }
+
+  /* ============================================================
+     12. КРУПНЫЙ ПЛАН ФОТО
+  ============================================================ */
+  .photo-closeup {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.3);
+    width: 260px; padding: 14px 14px 50px;
+    background: #fff8ee; border-radius: 8px;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.7), 0 0 0 2px rgba(255,190,120,0.5), 0 0 80px rgba(255,160,80,0.5);
+    z-index: 70; opacity: 0; pointer-events: none;
+    transition: opacity 0.5s ease, transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .photo-closeup.show {
+    opacity: 1; transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+  }
+  .photo-closeup-img {
+    width: 100%; height: 240px;
+    background: linear-gradient(160deg, #ffe8c8, #ffc98a);
+    border-radius: 4px;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 5.5em; position: relative; overflow: hidden;
+  }
+  .photo-closeup-img .inner-heart {
+    position: absolute; font-size: 0.35em;
+    animation: floatInner 3s ease-in-out infinite;
+    opacity: 0.85;
+  }
+  .photo-closeup-img .inner-heart.h1 { top: 12%; left: 10%; animation-delay: 0s; }
+  .photo-closeup-img .inner-heart.h2 { top: 22%; right: 14%; animation-delay: 0.6s; font-size: 0.28em; }
+  .photo-closeup-img .inner-heart.h3 { bottom: 18%; left: 20%; animation-delay: 1.1s; font-size: 0.32em; }
+  .photo-closeup-img .inner-heart.h4 { bottom: 26%; right: 10%; animation-delay: 1.6s; }
+  @keyframes floatInner {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+    50% { transform: translateY(-8px) scale(1.15); opacity: 1; }
+  }
+  .photo-closeup-caption {
+    position: absolute; bottom: 12px; left: 0; right: 0;
+    text-align: center; font-family: 'Georgia', serif;
+    font-style: italic; color: #7a2d0a; font-size: 1.15em; font-weight: bold;
+  }
+  .photo-closeup-caption::before { content: '❤️ '; }
+  .photo-closeup-caption::after { content: ' ❤️'; }
+  .photo-closeup-close {
+    position: absolute; top: -14px; right: -14px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, #ff8a3d, #d9641f);
+    color: #fff; border: none; font-size: 1.1em; font-weight: bold;
+    cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    display: flex; justify-content: center; align-items: center;
+    transition: transform 0.3s ease; z-index: 72;
+  }
+  .photo-closeup-close:hover { transform: scale(1.15) rotate(90deg); }
+
+  .give-fox-btn {
+    position: absolute; bottom: -20px; left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 28px;
+    font-family: 'Georgia', serif; font-size: 1em; font-weight: bold;
+    color: #4a1500;
+    background: linear-gradient(135deg, #ffb74d, #ffe0b2, #ff8a3d);
+    background-size: 200% auto;
+    border: none; border-radius: 50px; cursor: pointer;
+    box-shadow: 0 10px 25px rgba(255, 140, 60, 0.6), 0 0 30px rgba(255, 180, 100, 0.4);
+    animation: shine 3s linear infinite, btnFloat 3s ease-in-out infinite;
+    z-index: 72; opacity: 0; pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+  .give-fox-btn.show { opacity: 1; pointer-events: auto; }
+  .give-fox-btn:hover { transform: translateX(-50%) translateY(-4px) scale(1.05); }
+
+  /* ============================================================
+     13. ЗАГОЛОВОК + ТИТРЫ
+  ============================================================ */
+  .anniversary-overlay {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 45;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 2s ease;
+    display: flex; flex-direction: column;
+    align-items: center; overflow: hidden;
+  }
+  .anniversary-overlay.show { opacity: 1; pointer-events: auto; }
+
+  .credits-backdrop {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 44;
+    background: radial-gradient(ellipse at center,
+      rgba(40, 15, 5, 0.92) 0%,
+      rgba(25, 8, 2, 0.96) 50%,
+      rgba(10, 3, 0, 0.99) 100%);
+    opacity: 0; pointer-events: none;
+    transition: opacity 3s ease;
+  }
+  .credits-backdrop.show { opacity: 1; }
+
+  .anniversary-title {
+    position: absolute; top: 12%; left: 50%;
+    transform: translateX(-50%) translateY(40px) scale(0.7);
+    font-size: 2.6em; font-weight: bold; text-align: center;
+    background: linear-gradient(135deg, #ffe0b2, #ff8a3d, #ffd6e8, #ffe0b2);
+    background-size: 300% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 4px 20px rgba(255, 140, 60, 0.8));
+    animation: titleFloat 1.5s 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+               shine 4s 2s linear infinite;
+    opacity: 0; white-space: nowrap; z-index: 50;
+  }
+  @keyframes titleFloat {
+    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  }
+
+  .credits-container {
+    position: absolute; top: 100%; left: 50%;
+    transform: translateX(-50%);
+    width: 90%; max-width: 700px;
+    text-align: center; padding-bottom: 40px;
+    z-index: 48;
+  }
+  .credits-container.rolling { animation: creditsRoll 80s linear forwards; }
+  @keyframes creditsRoll {
+    0% { top: 100%; }
+    100% { top: -300%; }
+  }
+
+  .credits-block {
+    margin: 0 auto 60px;
+    color: rgba(255, 245, 230, 0.95);
+    font-size: 1.15em; line-height: 1.9;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+  }
+  .credits-block.big {
+    font-size: 1.5em; font-style: italic; color: #ffe0b2;
+    text-shadow: 0 0 20px rgba(255, 180, 90, 0.8), 0 2px 10px rgba(0,0,0,0.6);
+  }
+  .credits-block.title-block {
+    font-size: 2em; font-weight: bold;
+    background: linear-gradient(135deg, #ffe0b2, #ff8a3d, #ffe0b2);
+    background-size: 200% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shine 4s linear infinite;
+    margin-bottom: 80px;
+  }
+  .credits-block.hearts { font-size: 1.8em; letter-spacing: 14px; margin: 40px 0; }
+  .credits-block.signature { font-size: 1.3em; color: #ffb74d; font-style: italic; margin-top: 50px; }
+  .credits-divider {
+    width: 120px; height: 2px; margin: 30px auto;
+    background: linear-gradient(90deg, transparent, rgba(255, 200, 140, 0.7), transparent);
+  }
+
+  .replay-btn {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    z-index: 60; padding: 14px 36px;
+    font-family: 'Georgia', serif; font-size: 1em;
+    color: #4a1500;
+    background: linear-gradient(135deg, #ffb74d, #ffe0b2, #ff8a3d);
+    background-size: 200% auto;
+    border: none; border-radius: 50px; cursor: pointer; font-weight: bold;
+    box-shadow: 0 10px 30px rgba(255, 140, 60, 0.6), 0 0 40px rgba(255, 180, 100, 0.3);
+    opacity: 0; pointer-events: none;
+    transition: opacity 1s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: shine 3s linear infinite;
+  }
+  .replay-btn.show {
+    opacity: 1; pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+  .replay-btn:hover { transform: translateX(-50%) translateY(-4px) scale(1.05); }
+
+  .scene-controls {
+    margin-top: 20px;
+    display: flex; gap: 14px;
+    justify-content: center; flex-wrap: wrap;
+  }
+  .scene-btn {
+    padding: 12px 30px;
+    font-family: 'Georgia', serif; font-size: 0.98em;
+    color: #4a1500;
+    background: linear-gradient(135deg, #ffb74d, #ffe0b2);
+    border: none; border-radius: 50px;
+    cursor: pointer; font-weight: bold;
+    box-shadow: 0 8px 22px rgba(255, 140, 60, 0.45);
+    transition: all 0.3s ease;
+  }
+  .scene-btn:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 12px 30px rgba(255, 140, 60, 0.65); }
+  .scene-btn.ghost {
+    background: transparent; color: #ffe0b2;
+    border: 2px solid rgba(255, 180, 100, 0.6);
+    box-shadow: none;
+  }
+  .scene-btn.ghost:hover { background: rgba(255,180,100,0.15); }
+  .scene-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* ============================================================
+     14. АДАПТИВ
+  ============================================================ */
+  @media (max-width: 700px) {
+    .scene-card { padding: 16px 12px 24px; }
+    .photo-strings { height: 120px; }
+    .hanging-photo { width: 48px; height: 60px; }
+    .hanging-photo .photo-inner { font-size: 1.4em; }
+    .hp1 { left: 2%; } .hp2 { left: 22%; } .hp3 { left: 42%; } .hp4 { left: 62%; } .hp5 { left: 82%; }
+    .scene { height: 280px; }
+    .sofa-wrap { width: 320px; height: 150px; }
+    .sofa-back { width: 270px; height: 86px; bottom: 60px; }
+    .sofa-seat { width: 320px; height: 54px; bottom: 22px; }
+    .sofa-arm { width: 44px; height: 96px; }
+    .fox { width: 130px; height: 168px; bottom: 68px; }
+    .fox-body { width: 86px; height: 98px; bottom: 10px; }
+    .fox-belly { width: 52px; height: 62px; }
+    .fox-head { width: 88px; height: 80px; top: 4px; }
+    .fox-arm { top: 90px; width: 20px; height: 38px; }
+    .fox-arm.l { margin-left: -24px; }
+    .fox-arm.r { margin-left: 4px; }
+    .fox-tail { width: 82px; height: 52px; right: -42px; }
+    .fox-tail::after { width: 36px; height: 36px; }
+    .fox-eye { top: 30px; }
+    .fox-eye.l { left: 20px; } .fox-eye.r { right: 20px; }
+    .fox.looking-up .fox-eye { top: 25px; }
+    .fox.looking-down .fox-eye { top: 34px; }
+    .fox-snout { width: 52px; height: 40px; }
+    .fox-nose { bottom: 24px; }
+    .fox.looking-up .fox-nose { bottom: 28px; }
+    .fox-ear { border-left: 18px solid transparent; border-right: 18px solid transparent; border-bottom: 34px solid #e8863a; top: -26px; }
+    .fox-ear::after { top: 14px; left: -10px; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 18px solid #ffd0a8; }
+    .story-window { font-size: 0.88em; padding: 13px 18px; min-height: 70px; }
+    .falling-photo { width: 48px; height: 60px; left: 82%; }
+    .falling-photo .photo-inner { font-size: 1.4em; }
+    @keyframes photoFall {
+      0% { opacity: 1; transform: translate(-50%, 0) rotate(-5deg); }
+      60% { opacity: 1; transform: translate(calc(-50% - 120px), 180px) rotate(25deg); }
+      85% { opacity: 1; transform: translate(calc(-50% - 180px), 280px) rotate(45deg); }
+      100% { opacity: 1; transform: translate(calc(-50% - 200px), 310px) rotate(55deg); }
+    }
+    .hug-scene { width: 320px; height: 220px; }
+    .hug-pair { width: 260px; height: 190px; }
+    .hug-bodies { width: 190px; height: 95px; bottom: 26px; }
+    .hug-body-fox { width: 112px; height: 93px; }
+    .hug-body-raccoon { width: 112px; height: 93px; }
+    .hug-belly-fox { left: 26px; width: 52px; height: 60px; }
+    .hug-belly-raccoon { right: 26px; width: 52px; height: 60px; }
+    .hug-head { width: 78px; height: 72px; top: 32px; }
+    .hug-head-fox { left: 54px; }
+    .hug-head-raccoon { right: 54px; }
+    .hug-arms { width: 190px; top: 94px; }
+    .hug-raccoon-mask { width: 66px; height: 24px; top: 24px; }
+    .hug-raccoon-mask::before, .hug-raccoon-mask::after { width: 10px; height: 10px; top: 7px; }
+    .hug-eye-fox { top: 32px; width: 12px; height: 4px; }
+    .hug-eye-fox.l { left: 18px; } .hug-eye-fox.r { right: 18px; }
+    .anniversary-title { font-size: 1.8em; white-space: normal; padding: 0 20px; }
+    .credits-block { font-size: 1em; }
+    .credits-block.big { font-size: 1.25em; }
+    .credits-block.title-block { font-size: 1.6em; }
+    .photo-closeup { width: 220px; }
+    .photo-closeup-img { height: 200px; font-size: 4.5em; }
+  }
+
+  @media (max-width: 600px) {
+    .card { padding: 38px 20px 32px; border-radius: 26px; }
+    .card::before, .card::after {
+      border-left: 30px solid transparent;
+      border-right: 30px solid transparent;
+      border-bottom: 44px solid #d9641f;
+      top: -28px;
+    }
+    .title { font-size: 1.5em; }
+    .time-value { font-size: 1.6em; }
+    .time-unit, .year-unit { min-width: 48px; }
+    .counter { gap: 5px; }
+    .big-heart { font-size: 2.2em; }
+    .year-unit .time-value { font-size: 1.8em; }
+    .greeting-title { font-size: 1.5em; }
+    .greeting-text { font-size: 1em; line-height: 1.8; }
+    .next-btn { padding: 13px 30px; font-size: 0.95em; }
+    .clock-box { padding: 18px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="hearts" id="hearts"></div>
+
+<!-- ================= СТРАНИЦА 1 ================= -->
+<div class="page show" id="page1">
+  <div class="card">
+    <div class="big-heart">🦊❤️🦝</div>
+    <h1 class="title">Лёле от Лисёнка</h1>
+    <p class="subtitle">Ты — мой самый пушистый енот 🦝<br>А я — твоя рыжая лисичка, которая тебя очень любит 🦊</p>
+
+    <div class="counter-box" id="counterBox">
+      <div class="counter-label" id="counterLabel">Мы вместе уже</div>
+      <div class="counter">
+        <div class="year-unit" id="yearUnit">
+          <div class="time-value" id="years">0</div>
+          <div class="time-label" id="yearLabel">год</div>
+        </div>
+        <div class="time-unit"><div class="time-value" id="months">0</div><div class="time-label">мес.</div></div>
+        <div class="time-unit"><div class="time-value" id="days">0</div><div class="time-label">дней</div></div>
+        <div class="time-unit"><div class="time-value" id="hours">0</div><div class="time-label">часов</div></div>
+        <div class="time-unit"><div class="time-value" id="minutes">0</div><div class="time-label">минут</div></div>
+        <div class="time-unit"><div class="time-value" id="seconds">0</div><div class="time-label">секунд</div></div>
+      </div>
+      <div class="anniversary-badge" id="annivBadge">🎉 Годовщина! 🎉</div>
+    </div>
+
+    <div class="clock-box">
+      <div class="counter-label">
+        <span class="icon">🦝</span> У Лёли сейчас (+2 ч)
+      </div>
+      <div class="counter">
+        <div class="time-unit"><div class="time-value" id="clockMonths">0</div><div class="time-label">мес.</div></div>
+        <div class="time-unit"><div class="time-value" id="clockDays">0</div><div class="time-label">дней</div></div>
+        <div class="time-unit"><div class="time-value" id="clockHours">0</div><div class="time-label">часов</div></div>
+        <div class="time-unit"><div class="time-value" id="clockMinutes">0</div><div class="time-label">минут</div></div>
+        <div class="time-unit"><div class="time-value" id="clockSeconds">0</div><div class="time-label">секунд</div></div>
+      </div>
+    </div>
+
+    <p class="message">
+      «Ты мой Лёля,<br>
+      ты — моя самая тёплая осень и самый уютный лес.»
+    </p>
+
+    <button class="next-btn" id="nextBtn">Открыть поздравление 💌</button>
+  </div>
+</div>
+
+<!-- ================= СТРАНИЦА 2 ================= -->
+<div class="page hidden-wait" id="page2">
+  <div class="card greeting-card">
+    <div class="big-heart">🦊💌🦝</div>
+    <h1 class="greeting-title">Поздравляю, мой Лёля!</h1>
+
+    <p class="greeting-text">Ты — мой самый любимый енот на свете 🦝</p>
+    <p class="greeting-text d2">Спасибо тебе за каждый тёплый вечер,<br>за смех, за объятия и за то,<br>что ты просто есть рядом.</p>
+    <p class="greeting-text d3">Ты — моя самая тёплая осень,<br>самый уютный лес и самый рыжий лучик солнца.<br>А я всегда буду твоей лисичкой 🦊</p>
+
+    <div class="hearts-line">🦊 ❤️ 🦝</div>
+
+    <p class="greeting-text d4 bold">С любовью, твоя Лисичка 🧡</p>
+
+    <div class="btn-row">
+      <button class="back-btn" id="backBtn">← Назад</button>
+      <button class="next-btn" id="nextBtn2">Рассказ 🦊</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= СТРАНИЦА 3 ================= -->
+<div class="page hidden-wait" id="page3">
+  <div class="card scene-card">
+
+    <div class="photo-strings" id="photoStrings">
+      <div class="string s1"></div>
+      <div class="string s2"></div>
+      <div class="string s3"></div>
+      <div class="hanging-photo hp1" id="photoToDrop"><div class="photo-inner">❤️</div></div>
+      <div class="hanging-photo hp2"><div class="photo-inner">🦊</div></div>
+      <div class="hanging-photo hp3"><div class="photo-inner">🦝</div></div>
+      <div class="hanging-photo hp4"><div class="photo-inner">❤️</div></div>
+      <div class="hanging-photo hp5"><div class="photo-inner">🧡</div></div>
+    </div>
+
+    <div class="scene">
+      <div class="tap-hint" id="tapHint">Потыкай лисичку 🦊</div>
+
+      <div class="sofa-wrap">
+        <div class="sofa-back"></div>
+        <div class="sofa-seat"></div>
+        <div class="sofa-arm left"></div>
+        <div class="sofa-arm right"></div>
+        <div class="sofa-leg l"></div>
+        <div class="sofa-leg r"></div>
+      </div>
+
+      <div class="fox" id="fox">
+        <div class="fox-tail"></div>
+        <div class="fox-body">
+          <div class="fox-belly"></div>
+        </div>
+        <div class="fox-foot l"><span class="toe"></span><span class="toe"></span><span class="toe"></span></div>
+        <div class="fox-foot r"><span class="toe"></span><span class="toe"></span><span class="toe"></span></div>
+        <div class="fox-arm l"></div>
+        <div class="fox-arm r"></div>
+        <div class="fox-head">
+          <div class="fox-ear l"></div>
+          <div class="fox-ear r"></div>
+          <div class="fox-snout"></div>
+          <div class="fox-nose"></div>
+          <div class="fox-eye l"></div>
+          <div class="fox-eye r"></div>
+        </div>
+      </div>
+
+      <div class="hug-scene" id="hugScene">
+        <div class="hug-pair">
+          <div class="hug-tail hug-tail-fox"></div>
+          <div class="hug-tail hug-tail-raccoon"></div>
+          <div class="hug-bodies">
+            <div class="hug-body-fox"></div>
+            <div class="hug-body-raccoon"></div>
+            <div class="hug-belly-fox"></div>
+            <div class="hug-belly-raccoon"></div>
+          </div>
+          <div class="hug-arms"></div>
+          <div class="hug-head hug-head-fox">
+            <div class="hug-snout-fox"></div>
+            <div class="hug-eye-fox l"></div>
+            <div class="hug-eye-fox r"></div>
+          </div>
+          <div class="hug-head hug-head-raccoon">
+            <div class="hug-snout-raccoon"></div>
+            <div class="hug-raccoon-mask"></div>
+          </div>
+        </div>
+        <div class="hug-hearts">
+          <span class="hug-heart h1">❤️</span>
+          <span class="hug-heart h2">💕</span>
+          <span class="hug-heart h3">🧡</span>
+          <span class="hug-heart h4">💖</span>
+          <span class="hug-heart h5">✨</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="story-window" id="storyWindow"></div>
+
+    <div class="scene-controls">
+      <button class="scene-btn" id="startStory">Начать рассказ 🦊</button>
+      <button class="scene-btn ghost" id="backBtn3">← Назад</button>
+    </div>
+  </div>
+</div>
+
+<!-- ПАДАЮЩЕЕ ФОТО -->
+<div class="falling-photo" id="fallingPhoto">
+  <div class="photo-inner">❤️</div>
+</div>
+
+<!-- Крупный план фото -->
+<div class="photo-closeup" id="photoCloseup">
+  <button class="photo-closeup-close" id="closePhoto">✕</button>
+  <div class="photo-closeup-img">
+    🦝
+    <span class="inner-heart h1">❤️</span>
+    <span class="inner-heart h2">💕</span>
+    <span class="inner-heart h3">🧡</span>
+    <span class="inner-heart h4">💖</span>
+  </div>
+  <div class="photo-closeup-caption">Мой любимый енот</div>
+  <button class="give-fox-btn" id="giveFoxBtn">Отдать лисичке 🦊</button>
+</div>
+
+<!-- Тёмный фон для титров -->
+<div class="credits-backdrop" id="creditsBackdrop"></div>
+
+<!-- Заголовок + титры -->
+<div class="anniversary-overlay" id="anniversaryOverlay">
+  <div class="anniversary-title">С годом наших отношений!</div>
+  <div class="credits-container" id="creditsContainer">
+    <div class="credits-block title-block">С годом наших отношений!</div>
+    <div class="credits-block big">Спасибо тебе, мой любимый енот 🦝</div>
+    <div class="credits-divider"></div>
+    <div class="credits-block">
+      Спасибо за этот год,<br>за каждый тёплый вечер,<br>за каждое «доброе утро» и «спокойной ночи»,<br>за смех до слёз и объятия до утра.
+    </div>
+    <div class="credits-block">
+      Спасибо за то, что был рядом,<br>когда было трудно,<br>и за то, что радовался вместе со мной,<br>когда было хорошо.
+    </div>
+    <div class="credits-block big">
+      Ты — моя самая тёплая осень,<br>самый уютный лес<br>и самый рыжий лучик солнца.
+    </div>
+    <div class="credits-block hearts">🦊 ❤️ 🦝</div>
+    <div class="credits-block">
+      Спасибо за каждый рисунок,<br>за каждый подарок,<br>за каждое сообщение,<br>что оставило частичку во мне.
+    </div>
+    <div class="credits-block">
+      Спасибо за то, что ты есть.<br>За то, что мы есть.<br>За этот год — и за все, что впереди.
+    </div>
+    <div class="credits-divider"></div>
+    <div class="credits-block big">Я тебя очень люблю, Лёля 🧡</div>
+    <div class="credits-block hearts">🦊 💕 🦝</div>
+    <div class="credits-block signature">— с любовью, твоя Лисичка 🦊</div>
+    <div class="credits-block" style="font-size: 0.9em; opacity: 0.6; margin-top: 80px;">Конец ❤️</div>
+  </div>
+</div>
+
+<button class="replay-btn" id="replayBtn">Посмотреть ещё раз 🔁</button>
+
+<script>
+  'use strict';
+
+  // ============================================================
+  // 1. ДАТА НАЧАЛА ОТНОШЕНИЙ (18 ноября 2025, 00:00)
+  // ============================================================
+  const START_DATE = new Date(2025, 10, 18, 0, 0, 0);
+  const HOUR = 60 * 60 * 1000;
+
+  // Разница между двумя датами, разложенная на годы/месяцы/дни/часы/минуты/секунды
+  function elapsedParts(start, now) {
+    let years = now.getFullYear() - start.getFullYear();
+    let months = now.getMonth() - start.getMonth();
+    let days = now.getDate() - start.getDate();
+    let hours = now.getHours() - start.getHours();
+    let minutes = now.getMinutes() - start.getMinutes();
+    let seconds = now.getSeconds() - start.getSeconds();
+
+    if (seconds < 0) { seconds += 60; minutes--; }
+    if (minutes < 0) { minutes += 60; hours--; }
+    if (hours < 0) { hours += 24; days--; }
+    if (days < 0) {
+      days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+      months--;
+    }
+    if (months < 0) { months += 12; years--; }
+    return { years, months, days, hours, minutes, seconds };
+  }
+
+  function getYearWord(n) {
+    const mod10 = n % 10, mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return 'год';
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'года';
+    return 'лет';
+  }
+
+  function setValue(id, value) {
+    const el = document.getElementById(id);
+    const formatted = String(value).padStart(2, '0');
+    if (el.textContent !== formatted) {
+      el.textContent = formatted;
+      el.classList.remove('pulse');
+      void el.offsetWidth;
+      el.classList.add('pulse');
+    }
+  }
+
+  // ============================================================
+  // 2. ОСНОВНОЙ СЧЁТЧИК (+ годовщина)
+  // ============================================================
+  let wasYearShown = false;
+
+  function updateCounter() {
+    const p = elapsedParts(START_DATE, new Date());
+    const yearUnit = document.getElementById('yearUnit');
+    const yearLabel = document.getElementById('yearLabel');
+    const counterBox = document.getElementById('counterBox');
+    const annivBadge = document.getElementById('annivBadge');
+    const counterLabel = document.getElementById('counterLabel');
+
+    if (p.years >= 1) {
+      if (!wasYearShown) {
+        wasYearShown = true;
+        yearUnit.classList.add('show');
+        counterBox.classList.add('anniversary');
+        annivBadge.classList.add('show');
+        counterLabel.textContent = 'Мы вместе уже целых';
+        for (let i = 0; i < 30; i++) setTimeout(createHeart, i * 60);
+      }
+      setValue('years', p.years);
+      yearLabel.textContent = getYearWord(p.years);
+    } else {
+      yearUnit.classList.remove('show');
+      counterBox.classList.remove('anniversary');
+      annivBadge.classList.remove('show');
+      counterLabel.textContent = 'Мы вместе уже';
+    }
+
+    setValue('months', p.months);
+    setValue('days', p.days);
+    setValue('hours', p.hours);
+    setValue('minutes', p.minutes);
+    setValue('seconds', p.seconds);
+  }
+
+  // ============================================================
+  // 3. ТАЙМЕР «У Лёли» (+2 часа) — та же логика, другая точка отсчёта
+  // ============================================================
+  function updateClock() {
+    const p = elapsedParts(START_DATE, new Date(Date.now() + 2 * HOUR));
+    setValue('clockMonths', p.years * 12 + p.months);
+    setValue('clockDays', p.days);
+    setValue('clockHours', p.hours);
+    setValue('clockMinutes', p.minutes);
+    setValue('clockSeconds', p.seconds);
+  }
+
+  updateCounter();
+  setInterval(updateCounter, 1000);
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ============================================================
+  // 4. ПЕРЕХОДЫ МЕЖДУ СТРАНИЦАМИ
+  // ============================================================
+  const pages = {
+    p1: document.getElementById('page1'),
+    p2: document.getElementById('page2'),
+    p3: document.getElementById('page3'),
+  };
+
+  function goTo(from, to) {
+    from.classList.remove('show');
+    from.classList.add('hidden-out');
+    to.classList.remove('hidden-wait', 'hidden-out');
+    setTimeout(() => to.classList.add('show'), 250);
+    for (let i = 0; i < 25; i++) setTimeout(createHeart, i * 50);
+  }
+
+  function goBack(from, to) {
+    from.classList.remove('show');
+    from.classList.add('hidden-wait');
+    to.classList.remove('hidden-out', 'hidden-wait');
+    setTimeout(() => to.classList.add('show'), 250);
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', () => goTo(pages.p1, pages.p2));
+  document.getElementById('nextBtn2').addEventListener('click', () => goTo(pages.p2, pages.p3));
+  document.getElementById('backBtn').addEventListener('click', () => goBack(pages.p2, pages.p1));
+  document.getElementById('backBtn3').addEventListener('click', () => goBack(pages.p3, pages.p2));
+
+  // ============================================================
+  // 5. СЦЕНА: элементы
+  // ============================================================
+  const fox = document.getElementById('fox');
+  const storyWindow = document.getElementById('storyWindow');
+  const startStoryBtn = document.getElementById('startStory');
+  const fallingPhoto = document.getElementById('fallingPhoto');
+  const photoToDrop = document.getElementById('photoToDrop');
+  const photoStrings = document.getElementById('photoStrings');
+  const photoCloseup = document.getElementById('photoCloseup');
+  const closePhotoBtn = document.getElementById('closePhoto');
+  const giveFoxBtn = document.getElementById('giveFoxBtn');
+  const tapHint = document.getElementById('tapHint');
+  const hugScene = document.getElementById('hugScene');
+  const annivOverlay = document.getElementById('anniversaryOverlay');
+  const creditsContainer = document.getElementById('creditsContainer');
+  const creditsBackdrop = document.getElementById('creditsBackdrop');
+  const replayBtn = document.getElementById('replayBtn');
+
+  const STORY = {
+    part1: 'Каждый момент, каждое слово и действие, каждый новый день — крепко запечатлены в моей памяти, Лёля. И каждый шаг по земле, через всё наше расстояние — это шаг к нашему счастью, к жизни. К нам...',
+    interrupt: 'Ой! Что это... Фотография упала! Прямо с сердечком 🧡',
+    watch: 'Она летит вниз... такая красивая...',
+    laugh: 'Ахаха! Ну куда же ты! 😄 Испугала меня!',
+    lookUp: 'А наверху... наверху висят все наши с тобой моменты...',
+    part2: 'Я никогда не думала, что ты станешь смыслом моей жизни. Каждое твоё сообщение оставляет частичку во мне, каждый рисунок и подарок. Ты.',
+    part3: 'Ты занимаешь главное место на этой полке, главное место в моей жизни. В сердце. Во мне.',
+    finished: 'Ой, смотри... там на полу фотография лежит. Подними её, пожалуйста 🧡',
+  };
+
+  let storyActive = false;
+  let photoGiven = false;
+
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  function speak(text) {
+    storyWindow.textContent = text;
+    storyWindow.classList.add('visible');
+  }
+  function hideSpeech() {
+    storyWindow.classList.remove('visible');
+  }
+
+  function resetScene() {
+    fox.classList.remove('looking-up', 'looking-down', 'tracking-photo', 'laughing', 'joyful');
+    photoStrings.classList.remove('revealed');
+    photosRestore();
+    photoToDrop.style.opacity = '1';
+    photoCloseup.classList.remove('show');
+    giveFoxBtn.classList.remove('show');
+    hugScene.classList.remove('show');
+    annivOverlay.classList.remove('show');
+    creditsBackdrop.classList.remove('show');
+    creditsContainer.classList.remove('rolling');
+    replayBtn.classList.remove('show');
+    tapHint.classList.remove('show');
+    fox.style.opacity = '1';
+    hideSpeech();
+    photoGiven = false;
+  }
+
+  // Вернуть падающее фото на исходное место (в body, стартовые стили)
+  function photosRestore() {
+    fallingPhoto.classList.remove('animate', 'landed', 'tappable');
+    fallingPhoto.style.opacity = '';
+    fallingPhoto.style.position = '';
+    fallingPhoto.style.top = '';
+    fallingPhoto.style.bottom = '';
+    fallingPhoto.style.left = '';
+    fallingPhoto.style.zIndex = '';
+    document.body.appendChild(fallingPhoto);
+  }
+
+  // ============================================================
+  // 6. РАССКАЗ — плоский сценарий вместо вложенных таймеров
+  // ============================================================
+  async function runStory() {
+    if (storyActive) return;
+    storyActive = true;
+    startStoryBtn.disabled = true;
+    startStoryBtn.textContent = 'Рассказывает… 🦊';
+    resetScene();
+
+    speak(STORY.part1);
+    await wait(4500);
+    hideSpeech();
+    await wait(200);
+
+    // Фото падает сверху вниз
+    fallingPhoto.style.opacity = '1';
+    fallingPhoto.classList.add('animate');
+    speak(STORY.interrupt);
+    playThud();
+    await wait(400);
+
+    fox.classList.add('tracking-photo');
+    speak(STORY.watch);
+    await wait(2400);
+
+    fox.classList.remove('tracking-photo');
+    fox.classList.add('looking-down');
+    speak(STORY.laugh);
+    playGiggle();
+    fox.classList.add('laughing');
+    await wait(2500);
+    fox.classList.remove('laughing', 'looking-down');
+    await wait(900);
+
+    speak(STORY.lookUp);
+    photoStrings.classList.add('revealed');
+    fox.classList.add('looking-up');
+    await wait(3800);
+    hideSpeech();
+    await wait(700);
+    fox.classList.remove('looking-up');
+    await wait(800);
+
+    speak(STORY.part2);
+    await wait(5000);
+    hideSpeech();
+    await wait(600);
+
+    speak(STORY.part3);
+    await wait(4500);
+    hideSpeech();
+    await wait(800);
+
+    speak(STORY.finished);
+    document.querySelector('.scene').appendChild(fallingPhoto);
+    fallingPhoto.style.position = 'absolute';
+    fallingPhoto.style.top = 'auto';
+    fallingPhoto.style.bottom = '10px';
+    fallingPhoto.style.left = '14%';
+    fallingPhoto.style.zIndex = '16';
+    fallingPhoto.classList.add('landed', 'tappable');
+    await wait(4000);
+    hideSpeech();
+
+    storyActive = false;
+    startStoryBtn.disabled = false;
+    startStoryBtn.textContent = 'Рассказать ещё раз 🦊';
+  }
+
+  startStoryBtn.addEventListener('click', runStory);
+
+  // ============================================================
+  // 7. ФОТО: поднять, отдать лисичке, титры
+  // ============================================================
+  function openPhoto() {
+    if (photoGiven || storyActive) return;
+    photoCloseup.classList.add('show');
+    playPickup();
+    setTimeout(() => giveFoxBtn.classList.add('show'), 600);
+  }
+  fallingPhoto.addEventListener('click', openPhoto);
+
+  closePhotoBtn.addEventListener('click', () => {
+    photoCloseup.classList.remove('show');
+    giveFoxBtn.classList.remove('show');
+  });
+
+  async function givePhoto() {
+    if (photoGiven) return;
+    photoGiven = true;
+    photoCloseup.classList.remove('show');
+    giveFoxBtn.classList.remove('show');
+    fallingPhoto.classList.remove('landed', 'tappable');
+
+    fox.classList.add('joyful');
+    playPurr();
+    playGiggle();
+    await wait(1500);
+    fox.classList.remove('joyful');
+    photoToDrop.style.opacity = '1';
+    speak('Вот твоё место, фотография 🧡');
+    await wait(2500);
+    hideSpeech();
+    fox.style.opacity = '0';
+    await wait(600);
+
+    hugScene.classList.add('show');
+    for (let i = 0; i < 30; i++) setTimeout(createHeart, i * 80);
+    await wait(3000);
+
+    creditsBackdrop.classList.add('show');
+    annivOverlay.classList.add('show');
+    await wait(2000);
+    creditsContainer.classList.add('rolling');
+    await wait(70000);
+    replayBtn.classList.add('show');
+  }
+  giveFoxBtn.addEventListener('click', givePhoto);
+
+  replayBtn.addEventListener('click', () => {
+    annivOverlay.classList.remove('show');
+    creditsBackdrop.classList.remove('show');
+    creditsContainer.classList.remove('rolling');
+    replayBtn.classList.remove('show');
+    hugScene.classList.remove('show');
+    fox.style.opacity = '1';
+    photoGiven = false;
+    resetScene();
+  });
+
+  // ============================================================
+  // 8. ЛИСИЧКУ МОЖНО ПОТЫКАТЬ
+  // ============================================================
+  function foxJoy() {
+    if (storyActive) return;
+    fox.classList.remove('joyful');
+    void fox.offsetWidth;
+    fox.classList.add('joyful');
+    playPurr();
+    playGiggle();
+    for (let i = 0; i < 8; i++) {
+      setTimeout(() => {
+        const h = document.createElement('div');
+        h.className = 'heart';
+        h.textContent = ['❤️','🧡','💕','💖','✨','🦊'][Math.floor(Math.random()*6)];
+        const rect = fox.getBoundingClientRect();
+        h.style.left = (rect.left + rect.width/2 + (Math.random()-0.5)*100) + 'px';
+        h.style.top = (rect.top + 20) + 'px';
+        h.style.position = 'fixed';
+        h.style.fontSize = (Math.random()*16 + 16) + 'px';
+        h.style.animation = 'floatUp 2.5s ease-out forwards';
+        h.style.opacity = '0';
+        h.style.zIndex = '60';
+        document.body.appendChild(h);
+        setTimeout(() => h.remove(), 2500);
+      }, i * 80);
+    }
+    setTimeout(() => fox.classList.remove('joyful'), 1400);
+  }
+  fox.addEventListener('click', foxJoy);
+  fox.addEventListener('touchstart', (e) => { e.preventDefault(); foxJoy(); }, { passive: false });
+
+  // ============================================================
+  // 9. ФОН: звёзды, сердечки, падающие лисички
+  // ============================================================
+  const starsContainer = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    const size = Math.random() * 2.5 + 1;
+    star.style.width = size + 'px';
+    star.style.height = size + 'px';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = Math.random() * 3 + 's';
+    star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+    starsContainer.appendChild(star);
+  }
+
+  const heartsContainer = document.getElementById('hearts');
+  const heartSymbols = ['🦊', '🦝', '🧡', '❤️', '🐾', '🍂', '✨'];
+
+  function createHeart() {
+    const heart = document.createElement('div');
+    heart.className = 'heart';
+    heart.textContent = heartSymbols[Math.floor(Math.random() * heartSymbols.length)];
+    heart.style.left = Math.random() * 100 + '%';
+    heart.style.fontSize = (Math.random() * 20 + 14) + 'px';
+    const duration = Math.random() * 8 + 8;
+    heart.style.animationDuration = duration + 's';
+    heartsContainer.appendChild(heart);
+    setTimeout(() => heart.remove(), duration * 1000);
+  }
+  setInterval(createHeart, 800);
+  for (let i = 0; i < 5; i++) setTimeout(createHeart, i * 400);
+
+  function createFallingFox() {
+    const f = document.createElement('div');
+    f.className = 'falling-fox';
+    f.textContent = '🦊';
+    f.style.left = Math.random() * 100 + '%';
+    f.style.fontSize = (Math.random() * 20 + 22) + 'px';
+    const duration = Math.random() * 10 + 14;
+    f.style.animationDuration = duration + 's';
+    f.style.animationDelay = (Math.random() * 4) + 's';
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), (duration + 4) * 1000);
+  }
+  setInterval(createFallingFox, 1800);
+  for (let i = 0; i < 5; i++) setTimeout(createFallingFox, i * 700);
+
+  // ============================================================
+  // 10. ЗВУКИ СЦЕНЫ (Web Audio)
+  // ============================================================
+  let audioCtx = null, masterGain = null;
+
+  function initAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0;
+    const delay = audioCtx.createDelay(1.0);
+    delay.delayTime.value = 0.3;
+    const feedback = audioCtx.createGain();
+    feedback.gain.value = 0.28;
+    const delayGain = audioCtx.createGain();
+    delayGain.gain.value = 0.35;
+    masterGain.connect(delay);
+    delay.connect(feedback);
+    feedback.connect(delay);
+    delay.connect(delayGain);
+    delayGain.connect(audioCtx.destination);
+    masterGain.connect(audioCtx.destination);
+  }
+
+  function playThud() {
+    if (!audioCtx) return;
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const t = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(180, t);
+      osc.frequency.exponentialRampToValueAtTime(60, t + 0.18);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.35, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(t);
+      osc.stop(t + 0.4);
+    } catch (e) {}
+  }
+
+  function playGiggle() {
+    if (!audioCtx) return;
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const t0 = audioCtx.currentTime + 0.05;
+      const notes = [880, 990, 1100, 990, 1100, 1230];
+      notes.forEach((f, i) => {
+        const t = t0 + i * 0.12;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = f;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.12, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(t);
+        osc.stop(t + 0.2);
+      });
+    } catch (e) {}
+  }
+
+  function playPurr() {
+    if (!audioCtx) return;
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const t0 = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const lfo = audioCtx.createOscillator();
+      const lfoGain = audioCtx.createGain();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.value = 42;
+      lfo.type = 'sine';
+      lfo.frequency.value = 18;
+      lfoGain.gain.value = 12;
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 400;
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(0.18, t0 + 0.1);
+      gain.gain.setValueAtTime(0.18, t0 + 1.2);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + 1.6);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+      osc.start(t0);
+      lfo.start(t0);
+      osc.stop(t0 + 1.7);
+      lfo.stop(t0 + 1.7);
+    } catch (e) {}
+  }
+
+  function playPickup() {
+    if (!audioCtx) return;
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const t = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400, t);
+      osc.frequency.exponentialRampToValueAtTime(800, t + 0.15);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.15, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+      osc.connect(g);
+      g.connect(masterGain);
+      osc.start(t);
+      osc.stop(t + 0.25);
+    } catch (e) {}
+  }
+
+  // ============================================================
+  // 11. МУЗЫКА
+  // ============================================================
+  let musicPlaying = false, musicTimer = null, currentVolume = 0;
+  const TARGET_VOLUME = 0.18;
+
+  const NOTES = {
+    D3: 146.83, E3: 164.81, Fsh3: 185.00, A3: 220.00, B3: 246.94,
+    D4: 293.66, E4: 329.63, Fsh4: 369.99, A4: 440.00, B4: 493.88,
+    D5: 587.33, E5: 659.25, Fsh5: 739.99, A5: 880.00
+  };
+
+  const MELODY = [
+    ['D4', 1], ['Fsh4', 1], ['A4', 1.5], ['Fsh4', 0.5],
+    ['E4', 1], ['D4', 1], ['B3', 2],
+    ['A3', 1], ['B3', 1], ['D4', 1.5], ['E4', 0.5],
+    ['D4', 2], ['A3', 2],
+    ['D4', 1], ['Fsh4', 1], ['A4', 1.5], ['B4', 0.5],
+    ['A4', 1], ['Fsh4', 1], ['E4', 2],
+    ['D4', 1], ['E4', 1], ['Fsh4', 1], ['D4', 1],
+    ['A3', 4],
+  ];
+
+  const BASS = [
+    ['D3', 4], ['B3', 4], ['A3', 4], ['Fsh3', 4],
+    ['D3', 4], ['B3', 4], ['A3', 4], ['Fsh3', 4],
+  ];
+
+  function playNote(freq, duration, when, type = 'sine', vol = 0.5) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, when);
+    gain.gain.linearRampToValueAtTime(vol, when + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, when + duration);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(when);
+    osc.stop(when + duration + 0.1);
+  }
+
+  function scheduleMelody() {
+    if (!audioCtx || !musicPlaying) return;
+    const now = audioCtx.currentTime + 0.1;
+    const beat = 0.55;
+    let time = now;
+
+    MELODY.forEach(([noteName, length]) => {
+      const freq = NOTES[noteName];
+      if (freq) {
+        playNote(freq, length * beat * 1.5, time, 'sine', 0.35);
+        playNote(freq * 2, length * beat * 1.2, time, 'triangle', 0.08);
+      }
+      time += length * beat;
+    });
+
+    let bassTime = now;
+    BASS.forEach(([noteName, length]) => {
+      const freq = NOTES[noteName];
+      if (freq) {
+        playNote(freq, length * beat * 1.8, bassTime, 'triangle', 0.18);
+        playNote(freq / 2, length * beat * 1.8, bassTime, 'sine', 0.12);
+      }
+      bassTime += length * beat;
+    });
+
+    const totalDuration = time - now;
+    musicTimer = setTimeout(scheduleMelody, totalDuration * 1000 - 200);
+  }
+
+  function fadeVolume(target, duration = 1500) {
+    if (!masterGain) return;
+    const start = currentVolume;
+    const startTime = performance.now();
+    function step(now) {
+      const p = Math.min((now - startTime) / duration, 1);
+      const v = start + (target - start) * p;
+      currentVolume = v;
+      masterGain.gain.value = v;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function startMusic() {
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (musicPlaying) return;
+    musicPlaying = true;
+    scheduleMelody();
+    fadeVolume(TARGET_VOLUME, 2500);
+  }
+
+  let musicStarted = false;
+  function onFirstInteraction() {
+    if (musicStarted) return;
+    musicStarted = true;
+    startMusic();
+    ['click', 'touchstart', 'pointerdown', 'keydown', 'mousemove', 'scroll']
+      .forEach(ev => document.removeEventListener(ev, onFirstInteraction));
+  }
+  ['click', 'touchstart', 'pointerdown', 'keydown', 'mousemove', 'scroll']
+    .forEach(ev => document.addEventListener(ev, onFirstInteraction, { passive: true }));
+
+  window.addEventListener('load', () => {
+    initAudio();
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().then(() => {
+        if (audioCtx.state === 'running') { musicStarted = true; startMusic(); }
+      }).catch(() => {});
+    } else {
+      musicStarted = true;
+      startMusic();
+    }
+  });
+</script>
+
+</body>
+</html>
